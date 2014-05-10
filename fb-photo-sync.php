@@ -2,14 +2,14 @@
 /*
  * Plugin Name: FB Photo Sync
  * Description: Import and manage Facebook photo ablums on your WordPress website.
- * Author: Mike Auteri 
- * Version: 0.1
+ * Author: Mike Auteri
+ * Version: 0.2
  * Author URI: http://www.mikeauteri.com/
  * Plugin URI: http://www.mikeauteri.com/projects/fb-photo-sync
  */
 
 class FB_Photo_Sync {
-	
+
 	public function __construct() {
 		add_action( 'admin_menu', array( $this, 'add_menu_page' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'admin_scripts' ) );
@@ -36,17 +36,17 @@ class FB_Photo_Sync {
 		$current = null;
 
 		foreach( $photos as $photo ) {
-			if ( ! $this->valid_image_size( $width, $height, $photo ) ) {
+			if( ! $this->valid_image_size( $width, $height, $photo ) ) {
 				continue;
 			}
 
 			$current = $this->get_closest_image( $width, $height, $photo, $current );
 		}
-		
+
 		if( $current == null ) {
 			$current['source'] = $photos[0]['source'];
 		}
-		
+
 		return $current['source'];
 	}
 
@@ -62,33 +62,62 @@ class FB_Photo_Sync {
 	}
 
 	private function get_closest_image( $width, $height, $photo, $current = null ) {
-		if ( ! $current ) {
+		if( ! $current ) {
 			return $photo;
 		}
 
 		$photo_sum = $this->get_image_diff_sum( $width, $height, $photo );
 		$current_sum = $this->get_image_diff_sum( $width, $height, $current );
 
-		if ( $current_sum > $photo_sum ) {
+		if( $current_sum > $photo_sum ) {
 			return $photo;
 		}
 
 		return $current;
 	}
 
+	public function save_image( $file, $desc ) {
+		// unattached to a post
+		$post_id = 0;
+		// Download file to temp location
+		$tmp = download_url( $file );
+
+		// Set variables for storage
+		// fix file filename for query strings
+		preg_match( '/[^\?]+\.(jpe?g|jpe|gif|png)\b/i', $file, $matches );
+		$file_array['name'] = basename($matches[0]);
+		$file_array['tmp_name'] = $tmp;
+
+		// If error storing temporarily, unlink
+		if ( is_wp_error( $tmp ) ) {
+			@unlink($file_array['tmp_name']);
+			$file_array['tmp_name'] = '';
+		}
+
+		// do the validation and storage stuff
+		$id = media_handle_sideload( $file_array, $post_id, $desc );
+		// If error storing permanently, unlink
+		if ( is_wp_error($id) ) {
+			@unlink($file_array['tmp_name']);
+			return $id;
+		}
+		return $id;
+	}
+
 	public function fb_album_shortcode( $atts ) {
 		extract( shortcode_atts( array(
 			'id' => '',
 			'width' => 130,
-			'height' => 130
+			'height' => 130,
+			'wp_photos' => false
 		), $atts ) );
 
 		if( empty( $id ) || is_Nan( $id ) ) {
 			return;
 		}
-		
+
 		$album = get_option( 'fbps_album_'.$id );
-		
+
 		if( !isset( $album['items'] ) )
 			return;
 
@@ -101,6 +130,16 @@ class FB_Photo_Sync {
 			foreach( $album['items'] as $item ) {
 				$thumbnail = $this->closest_image_size( $width, $height, $item['photos'] );
 				$image = $this->closest_image_size( 960, 960, $item['photos'] );
+				if( $wp_photos == 'true' ) {
+					$wp_thumbnail = wp_get_attachment_image_src( $item['wp_photo_id'], array($width, $height) );
+					$wp_image = wp_get_attachment_image_src( $item['wp_photo_id'], array(960, 960) );
+					if( is_array( $wp_thumbnail ) ) {
+						$thumbnail = $wp_thumbnail[0];
+					}
+					if( is_array( $wp_image ) ) {
+						$image = $wp_image[0];
+					}
+				}
 				?>
 				<li id="fbps-photo-<?php echo esc_attr( $item['id'] ); ?>" class="fbps-photo">
 					<a rel="fbps-album" class="fbps-photo" href="<?php echo esc_url( $image ); ?>" style="width: <?php echo intval( $width ); ?>px; height: <?php echo intval( $height ); ?>px; background-image: url(<?php echo esc_url( $thumbnail ); ?>);" alt="<?php echo esc_attr( $item['name'] ); ?>" title="<?php echo esc_attr( $item['name'] ); ?>">
@@ -115,12 +154,12 @@ class FB_Photo_Sync {
 		<script type="text/javascript">
 			(function($) {
 				$('a[rel="fbps-album"]').fancybox();
-			})(jQuery);	
-		</script>	
+			})(jQuery);
+		</script>
 		<?php
 		return ob_get_clean();
 	}
-	
+
 	public function admin_tabs( $current = 'import' ) {
 		$tabs = array( 'import' => 'Import', 'albums' => 'Albums' );
 		echo '<div class="wrap">';
@@ -131,9 +170,9 @@ class FB_Photo_Sync {
 			$class = ( $tab == $current ) ? ' nav-tab-active' : '';
 			echo "<a class='nav-tab$class' href='?page=fb-photo-sync&tab=$tab'>$name</a>";
     }
-    echo '</h2>';	
+    echo '</h2>';
 	}
-	
+
 	public function admin_content( $current = 'import' ) {
 		switch( $current ) {
 			case 'import':
@@ -178,21 +217,25 @@ class FB_Photo_Sync {
 		<p>When completed, click the <em>Albums</em> tab for the album shortcode to include in your post or page.</p>
 		<p>
 			<input type="text" id="fbps-page-input" placeholder="Enter Facebook Page ID" />
-			<input type="button" name="" id="fbps-load-albums" class="button" value="Find Albums" />
+			<input type="button" name="fbps-load-albums" id="fbps-load-albums" class="button" value="Find Albums" />
 		</p>
 		<p class="description">http://facebook.com/this-is-the-page-id</p>
+		<p>
+			<label for="fbps-wp-images"><input type="checkbox" checked="checked" name="fbps-wp-images" id="fbps-wp-images" /> Import images to WordPress media library?</label>
+		</p>
+		<p class="description">Checking the box above will import and save images from Facebook to your WordPress site. Import will take longer, so be patient.</p>
 		<ul id="fbps-page-album-list" class="fbps-list">
 		</ul>
 
 		<?php
 	}
-	
+
 	public function albums_page() {
 		global $wpdb;
-		
+
 		$query = $wpdb->prepare( "
-			SELECT option_name, option_value 
-			FROM {$wpdb->options} 
+			SELECT option_name, option_value
+			FROM {$wpdb->options}
 			WHERE
 			option_name LIKE %s
 			", 'fbps_album_%' );
@@ -201,13 +244,15 @@ class FB_Photo_Sync {
 		echo '<ul id="fbps-album-list">';
 		foreach( $albums as $album ) {
 			$dump = unserialize( $album->option_value );
+      $wp_photos = (bool) $dump['items'][0]['wp_photo_id'] ? 'checked="checked"' : '';
 			?>
 			<li data-id="<?php echo esc_attr( $dump['id'] ); ?>">
 				<h3><?php echo esc_html( $dump['name'] ); ?></h3>
 				<a href="#" class="fbps-image-sample" style="background-image: url(<?php echo esc_url( $dump['picture'] ); ?>);"></a>
 				<div class="fbps-options">
-					<p><code>[fb_album id="<?php echo esc_attr( $dump['id'] ); ?>"]</code></p>
-					<p><a href="#" class="delete-album">Delete</a> | <a href="#" class="sync-album">Sync</a></p>
+				<p><code>[fb_album id="<?php echo esc_attr( $dump['id'] ); ?>"<?php echo $wp_photos != '' ? ' wp_photos="true"' : ''; ?>]</code></p>
+          <p><label><input type="checkbox" <?php echo $wp_photos; ?> class="fbps-wp-photos" /> Import images to media library?</label>
+					<p><?php echo intval( count( $dump['items'] ) ); ?> Photos | <a href="#" class="delete-album">Delete</a> | <a href="#" class="sync-album">Sync</a></p>
 				</div>
 			</li>
 			<?php
@@ -218,11 +263,38 @@ class FB_Photo_Sync {
 	public function ajax_save_photos() {
 		header( 'Content-type: application/json' );
 		$album = json_decode( stripslashes( $_POST['album'] ), true );
+		$wp_photos = $_POST['wp_photos'] == 'true' ? true : false;
+
 		if( is_array( $album ) && current_user_can( 'manage_options' ) ) {
+				$saved_album = get_option( 'fbps_album_' . $album['id'] );
+				foreach( $album['items'] as $i => $item ) {
+					$wp_save = false;
+					if( isset( $saved_album['items'] ) ) {
+						foreach( $saved_album['items'] as $saved_item ) {
+							if( $item['id'] == $saved_item['id'] && ( isset( $saved_item['wp_photo_id'] ) && wp_get_attachment_image( $saved_item['wp_photo_id'] ) != null ) ) {
+								$wp_save = $saved_item['wp_photo_id'];
+								break;
+							}
+						}
+					}
+					if( $wp_photos ) {
+						if( !$wp_save ) {
+							$photo = $this->closest_image_size( 1000, 1000, $item['photos'] );
+							$image_id = $this->save_image( $photo, $item['name'] );
+							$album['items'][$i]['wp_photo_id'] = $image_id;
+						} else {
+							$album['items'][$i]['wp_photo_id'] = $wp_save;
+						}
+					} else {
+						if( $wp_save ) {
+							wp_delete_attachment( $wp_save, true );
+						}
+					}
+				}
 			update_option( 'fbps_album_' . esc_attr( $album['id'] ), $album );
-			echo json_encode( array( 'id' => $album['id'], 'success' => true, 'error' => false ) );
+			echo json_encode( array( 'id' => $album['id'], 'success' => true, 'wp_photos' => $wp_photos, 'error' => false, 'album' => $album ) );
 		} else {
-			echo json_encode( array( 'id' => $album['id'], 'success' => false, 'error' => true ) );
+			echo json_encode( array( 'id' => $album['id'], 'success' => false, 'wp_photos' => $wp_photos, 'error' => true ) );
 		}
 		die();
 	}
@@ -231,7 +303,15 @@ class FB_Photo_Sync {
 		$id = $_POST['id'];
 		header( 'Content-type: application/json' );
 		if( isset( $id ) && current_user_can( 'manage_options' ) ) {
-			delete_option( 'fbps_album_' . esc_attr( $id ) );
+			$saved_album = get_option( 'fbps_album_' . $id );
+			if( isset( $saved_album['items'] ) ) {
+				foreach( $saved_album['items'] as $saved_item ) {
+					if( isset( $saved_item['wp_photo_id'] ) ) {
+						wp_delete_attachment( $saved_item['wp_photo_id'], true );
+					}
+				}
+			}
+			delete_option( 'fbps_album_' . $id );
 			echo json_encode( array( 'id' => esc_attr( $id ), 'success' => true, 'error' => false ) );
 		} else {
 			echo json_encode( array( 'id' => esc_attr( $id ), 'success' => false, 'error' => true ) );
@@ -242,12 +322,12 @@ class FB_Photo_Sync {
 	public function add_menu_page() {
 		add_options_page( 'FB Photo Sync', 'FB Photo Sync', 'manage_options', 'fb-photo-sync', array( $this, 'display_options_page' ) );
 	}
-	
+
 	public function display_options_page() {
 		$current = isset( $_GET['tab'] ) ? $_GET['tab'] : 'import';
 		$this->admin_tabs( $current );
 		$this->admin_content( $current );
-		?>	
+		?>
 		<div id="fb-root"></div>
 		<script>
 			window.fbAsyncInit = function() {
@@ -260,7 +340,7 @@ class FB_Photo_Sync {
 
 			(function(d, s, id){
 				 var js, fjs = d.getElementsByTagName(s)[0];
-				 if (d.getElementById(id)) {return;}
+				 if(d.getElementById(id)) {return;}
 				 js = d.createElement(s); js.id = id;
 				 js.src = "//connect.facebook.net/en_US/all.js";
 				 fjs.parentNode.insertBefore(js, fjs);

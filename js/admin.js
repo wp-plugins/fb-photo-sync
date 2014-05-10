@@ -1,13 +1,13 @@
 (function($) {
 	window.fbps = {
-		
+
 		init: function() {
 			this.events();
 		},
-		
+
 		events: function() {
 			var self = this;
-			
+
 			$(document.body).on('click', '#fbps-load-albums', function(e) {
 				e.preventDefault();
 				var page_id = $('#fbps-page-input').val();
@@ -33,7 +33,13 @@
 					$('#import-form').find('li[data-id='+$(this).val()+']').remove();
 				}
 			});
-
+			
+			$('#fbps-page-input').keypress(function(e) {
+				if(e.keyCode === 13) { // pressed return
+					$('#fbps-load-albums').trigger('click');
+				}
+			});
+			
 			$('#import-form').on('change', 'input[type=checkbox]', function() {
 				var checked = $(this).prop('checked');
 				if(!checked) {
@@ -41,15 +47,14 @@
 					$('li[data-id='+$(this).val()+'] input[type=checkbox]').prop('checked', false);
 				}
 			});
-		
+
 			$('#import-form').on('click', '#import-button', function(e) {
 				e.preventDefault();
 				$('#import-form ul li').each(function() {
 					$(this).append('<span class="spinner" />');
 					$(this).find('.spinner').show();
 					var album_id = $(this).find('input[type=checkbox]').val();
-					self.facebook_import(album_id, $(this));
-					
+					self.facebook_import(album_id, $(this), $('#fbps-wp-images').prop('checked'));
 				});
 			});
 
@@ -94,12 +99,12 @@
 				var $this = $(this);
 				$this.parents('.fbps-options').find('p:first-child').append('<span style="float: left" class="spinner" />');
 				$this.parents('li').find('.spinner').show();
-				var album_id = $this.parents('li').data().id
-				self.facebook_import(album_id, $this.parents('li'));
+				var album_id = $this.parents('li').data().id;
+				self.facebook_import(album_id, $this.parents('li'), $this.parents('.fbps-options').find('.fbps-wp-photos').prop('checked'));
 			});
 		},
 
-		facebook_import: function(album_id, $parent) {
+		facebook_import: function(album_id, $parent, wp_photos) {
 			var self = this;
 			FB.api('/'+album_id, {fields: 'photos,picture,name'}, function(r) {
 				var album = {
@@ -124,20 +129,20 @@
 						album.items.push(item);
 					}
 					if(self.test_obj(r, 'photos.paging.next')) {
-						self.items_paging(r.photos.paging.next, album, $parent);
+						self.items_paging(r.photos.paging.next, album, $parent, wp_photos);
 					} else {
 						// done
-						self.ajax_save(r, album, $parent);
+						self.ajax_save(r, album, $parent, wp_photos);
 					}
 				}
 			});
 		},
 
-		items_paging: function(url, album, $parent) {
+		items_paging: function(url, album, $parent, wp_photos) {
 			var self = this;
 			$.getJSON(url, function(r) {
 				if(r) {
-					var items = r.data;	
+					var items = r.data;
 					for(var i = 0; i < items.length; i++) {
 						var item = {
 							id: items[i].id,
@@ -151,20 +156,20 @@
 					}
 				}
 				if(self.test_obj(r, 'paging.next')) {
-					self.items_paging(r.paging.next, album, $parent);
+					self.items_paging(r.paging.next, album, $parent, wp_photos);
 				} else {
 					// done
-					self.ajax_save(r, album, $parent);
+					self.ajax_save(r, album, $parent, wp_photos);
 				}
 			});
-			
 		},
 
-		ajax_save: function(r, album, $parent) {
+		ajax_save: function(r, album, $parent, wp_photos) {
 			album = JSON.stringify(album);
 			var data = {
 				action: 'fbps_save_album',
-				album: album
+				album: album,
+				wp_photos: wp_photos
 			};
 			$.post(ajaxurl, data, function(r) {
 				if(r.error) {
@@ -187,7 +192,7 @@
 			}
 			return true;
 		}
-		
+
 	};
 	window.fbps.init();
 })(jQuery);

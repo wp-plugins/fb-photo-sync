@@ -10,6 +10,7 @@
 	float: left;
 	width: 440px;
 	margin-right: 10px;
+	position: relative;
 }
 
 #fbps-album-list li h3 {
@@ -20,6 +21,14 @@
 
 #fbps-album-list code {
 	cursor: pointer;
+	white-space: nowrap;
+	font-size: 11px;
+}
+
+#fbps-album-list small {
+	position: absolute;
+	top: 30px;
+	color: #0074a2;
 }
 
 a.fbps-image-sample {

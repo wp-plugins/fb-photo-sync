@@ -9,7 +9,7 @@ Import and manage Facebook photo albums on your WordPress website.
 
 == Description ==
 
-Easily bring in Facebook photo albums from a public page into your WordPress website. Simple to set up, manage, and display on any post or page with use of the fb_album shortcode. This plugin is very much in beta.
+Easily import Facebook photo albums from a public page into your WordPress website. Simple to set up, manage, and display on any post or page with use of the fb_album shortcode. This plugin is very much in beta.
 
 Things to expect in future releases:
 
@@ -22,7 +22,7 @@ Things to expect in future releases:
 
 1. Unzip the plugin and Upload the directory 'fb-photo-sync' to '/wp-content/plugins/' on your site
 2. Activate the plugin through the 'Plugins' menu in WordPress
-3. That's it! Get started under WP Admin Panel � Settings � FB Photo Sync
+3. That's it! Get started under WP Admin Panel > Settings > FB Photo Sync
 
 == Screenshots ==
 
@@ -32,6 +32,8 @@ Things to expect in future releases:
 4. Fancybox modal after clicking on a photo.
 
 == Changelog ==
+= 0.2 =
+* Enhancement: Added ability to import images from Facebook into WordPress media library
 
 = 0.1 =
 * Initial release
