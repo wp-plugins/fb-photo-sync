@@ -3,7 +3,7 @@
  * Plugin Name: FB Photo Sync
  * Description: Import and manage Facebook photo ablums on your WordPress website.
  * Author: Mike Auteri
- * Version: 0.2
+ * Version: 0.3
  * Author URI: http://www.mikeauteri.com/
  * Plugin URI: http://www.mikeauteri.com/projects/fb-photo-sync
  */
@@ -28,8 +28,8 @@ class FB_Photo_Sync {
 
 	public function fbps_scripts() {
 		wp_enqueue_style( 'fbps-styles', plugin_dir_url( __FILE__ ) . 'css/styles.css', array(), 1.0 );
-		wp_enqueue_style( 'fancybox-css', plugin_dir_url( __FILE__ ) . 'fancybox/jquery.fancybox.css', array(), 1.0 );
-    wp_enqueue_script( 'fancybox-js', plugin_dir_url( __FILE__ ) . 'fancybox/jquery.fancybox.js', array( 'jquery' ), 1.0, false );
+		wp_enqueue_style( 'colorbox-css', plugin_dir_url( __FILE__ ) . 'colorbox/colorbox.css', array(), 1.0 );
+    wp_enqueue_script( 'colorbox-js', plugin_dir_url( __FILE__ ) . 'colorbox/jquery.colorbox-min.js', array( 'jquery' ), 1.0, false );
 	}
 
 	public function closest_image_size( $width, $height, $photos ) {
@@ -153,7 +153,7 @@ class FB_Photo_Sync {
 		</div>
 		<script type="text/javascript">
 			(function($) {
-				$('a[rel="fbps-album"]').fancybox();
+				$('a[rel="fbps-album"]').colorbox();
 			})(jQuery);
 		</script>
 		<?php

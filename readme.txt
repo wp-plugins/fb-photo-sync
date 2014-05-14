@@ -32,9 +32,12 @@ Things to expect in future releases:
 4. Fancybox modal after clicking on a photo.
 
 == Changelog ==
+= 0.3 =
+* Change: Removed FancyBox and replaced it with ColorBox. All software needs to be GPL (or compatible license).
+
 = 0.2 =
-* Enhancement: Added ability to import images from Facebook into WordPress media library
+* Enhancement: Added ability to import images from Facebook into WordPress media library.
 
 = 0.1 =
-* Initial release
+* Initial release.
 
