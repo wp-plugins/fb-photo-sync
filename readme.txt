@@ -32,6 +32,9 @@ Things to expect in future releases:
 4. Fancybox modal after clicking on a photo.
 
 == Changelog ==
+= 0.3.1 =
+* Change: Removed ColorBox and replaced it with FancyBox V1 which is GPL compatible license and better than ColorBox.
+
 = 0.3 =
 * Change: Removed FancyBox and replaced it with ColorBox. All software needs to be GPL (or compatible license).
 
