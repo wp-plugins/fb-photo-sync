@@ -2,6 +2,12 @@
 	float: left;
 }
 
+#fbps-page-album-list li,
+#fbps-import-list li {
+	display: inline-block;
+	width: 33%;
+}
+
 #fbps-album-list {
 	float: left;
 }

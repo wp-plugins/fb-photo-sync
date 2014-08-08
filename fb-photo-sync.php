@@ -3,9 +3,9 @@
  * Plugin Name: FB Photo Sync
  * Description: Import and manage Facebook photo ablums on your WordPress website.
  * Author: Mike Auteri
- * Version: 0.3.1
+ * Version: 0.3.2
  * Author URI: http://www.mikeauteri.com/
- * Plugin URI: http://www.mikeauteri.com/projects/fb-photo-sync
+ * Plugin URI: http://www.mikeauteri.com/portfolio/fb-photo-sync
  */
 
 class FB_Photo_Sync {
@@ -203,14 +203,6 @@ class FB_Photo_Sync {
 	public function import_page() {
 		global $facebook;
 		?>
-		<h3>Import Facebook Albums</h3>
-		<div id="import-form">
-			<ul>
-			</ul>
-			<p class="submit">
-				<input type="button" id="import-button" class="button button-primary" value="Import Albums">
-			</p>
-		</div>
 		<h3>Find Albums on a Public Page</h3>
 		<p>Type in a Page ID below and click the <em>Find Albums</em> button to pull in available albums.
 		<p>Check the albums you want to import into WordPress, and then click the <em>Import Albums</em> button above to import them.</p>
@@ -226,6 +218,14 @@ class FB_Photo_Sync {
 		<p class="description">Checking the box above will import and save images from Facebook to your WordPress site. Import will take longer, so be patient.</p>
 		<ul id="fbps-page-album-list" class="fbps-list">
 		</ul>
+		<h3>Import Facebook Albums</h3>
+		<div id="import-form">
+			<ul id="fbps-import-list">
+			</ul>
+			<p class="submit">
+				<input type="button" id="import-button" class="button button-primary" value="Import Albums">
+			</p>
+		</div>
 
 		<?php
 	}
@@ -292,11 +292,19 @@ class FB_Photo_Sync {
 					}
 				}
 			update_option( 'fbps_album_' . esc_attr( $album['id'] ), $album );
-			echo json_encode( array( 'id' => $album['id'], 'success' => true, 'wp_photos' => $wp_photos, 'error' => false, 'album' => $album ) );
+				$data = array(
+					'id' => $album['id'],
+					'wp_photos' => $wp_photos,
+					'album' => $album
+				);
+				wp_send_json_success( $data );
 		} else {
-			echo json_encode( array( 'id' => $album['id'], 'success' => false, 'wp_photos' => $wp_photos, 'error' => true ) );
+				$data = array(
+					'id' => $album['id'],
+					'wp_photos' => $wp_photos
+				);
+				wp_send_json_error( $data );
 		}
-		die();
 	}
 
 	public function ajax_delete_photos() {
@@ -312,11 +320,16 @@ class FB_Photo_Sync {
 				}
 			}
 			delete_option( 'fbps_album_' . $id );
-			echo json_encode( array( 'id' => esc_attr( $id ), 'success' => true, 'error' => false ) );
+			$data = array(
+				'id' => esc_attr( $id )
+			);
+			wp_send_json_success( $data );
 		} else {
-			echo json_encode( array( 'id' => esc_attr( $id ), 'success' => false, 'error' => true ) );
+			$data = array(
+				'id' => esc_attr( $id )
+			);
+			wp_send_json_error( $data );
 		}
-		die();
 	}
 
 	public function add_menu_page() {

@@ -32,6 +32,11 @@ Things to expect in future releases:
 4. Fancybox modal after clicking on a photo.
 
 == Changelog ==
+= 0.3.2 =
+* Change: Project URL
+* Change: Updated ajax endpoints to use wp functions
+* Change: Slight UI update to importer page in admin
+
 = 0.3.1 =
 * Change: Removed ColorBox and replaced it with FancyBox V1 which is GPL compatible license and better than ColorBox.
 

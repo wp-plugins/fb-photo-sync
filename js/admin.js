@@ -86,7 +86,7 @@
 					};
 					$.post(ajaxurl, data, function(r) {
 						if(r.success) {
-							$('li[data-id='+r.id+']').fadeOut(500, function() {
+							$('li[data-id='+r.data.id+']').fadeOut(500, function() {
 								$(this).remove();
 							});
 						}
