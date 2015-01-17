@@ -109,6 +109,7 @@ class FB_Photo_Sync {
 			'id' => '',
 			'width' => 130,
 			'height' => 130,
+			'order' => 'desc',
 			'wp_photos' => false
 		), $atts ) );
 
@@ -127,6 +128,9 @@ class FB_Photo_Sync {
 			<h3><?php echo esc_html( $album['name'] ); ?></h3>
 			<ul>
 			<?php
+			if( trim( strtolower( $atts['order'] ) ) == 'desc' ) {
+				$album['items'] = array_reverse( $album['items'] );
+			}
 			foreach( $album['items'] as $item ) {
 				$thumbnail = $this->closest_image_size( $width, $height, $item['photos'] );
 				$image = $this->closest_image_size( 960, 960, $item['photos'] );

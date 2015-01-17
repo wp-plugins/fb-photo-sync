@@ -1,8 +1,8 @@
 === FB Photo Sync ===
 Contributors: mauteri
 Tags: facebook, photos, gallery, albums, facebook albums, image gallery, photo gallery, fancybox, lightbox
-Requires at least: 3.2
-Tested up to: 3.9
+Requires at least: 3.3
+Tested up to: 4.2-alpha
 Stable tag: trunk
 
 Import and manage Facebook photo albums on your WordPress website.
@@ -32,6 +32,9 @@ Things to expect in future releases:
 4. Fancybox modal after clicking on a photo.
 
 == Changelog ==
+= 0.3.3 =
+* Added order parameter (asc and desc) to shortcode [fb_album id="8720954366" wp_photos="true" order="asc"] (desc is default).
+
 = 0.3.2 =
 * Change: Project URL
 * Change: Updated ajax endpoints to use wp functions
