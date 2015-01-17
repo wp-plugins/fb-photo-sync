@@ -3,7 +3,7 @@
  * Plugin Name: FB Photo Sync
  * Description: Import and manage Facebook photo ablums on your WordPress website.
  * Author: Mike Auteri
- * Version: 0.3.2
+ * Version: 0.3.3
  * Author URI: http://www.mikeauteri.com/
  * Plugin URI: http://www.mikeauteri.com/portfolio/fb-photo-sync
  */
