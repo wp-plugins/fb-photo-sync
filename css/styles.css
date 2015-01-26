@@ -1,0 +1,43 @@
+.fbps-album ul,
+.fbps-album ul li.fbps-photo {
+	margin: 0;
+	padding: 0;
+	list-style-type: none;
+}
+
+.fbps-album ul li.fbps-photo {
+	margin: 0 10px 10px 0;
+	display: inline-block;
+}
+
+li.fbps-photo a {
+	display: block;
+	background-color: #ddd;
+	border: 1px solid #666;
+	background-repeat: no-repeat;
+	background-position: center center;
+}
+
+/* Fancybox adjustments */
+body .fancybox-title-float-wrap .child {
+	white-space: normal;
+	-moz-border-radius: 0;
+	-o-border-radius: 0;
+	-webkit-border-radius: 0;
+	border-radius: 0;
+	text-align: left;
+	line-height: 20px;
+	display: block;
+	padding-bottom: 5px;
+}
+
+body .fancybox-title-float-wrap {
+	margin-bottom: 0;
+	opacity: 0;
+  transition: opacity .25s linear;
+	left: 0;
+}
+
+body .fancybox-wrap:hover .fancybox-title-float-wrap {
+	opacity: 1;
+}
