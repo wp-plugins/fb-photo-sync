@@ -3,7 +3,7 @@
  * Plugin Name: FB Photo Sync
  * Description: Import and manage Facebook photo ablums on your WordPress website.
  * Author: Mike Auteri
- * Version: 0.3.3
+ * Version: 0.3.4
  * Author URI: http://www.mikeauteri.com/
  * Plugin URI: http://www.mikeauteri.com/portfolio/fb-photo-sync
  */
@@ -190,6 +190,7 @@ class FB_Photo_Sync {
 		}
 		?>
 		<hr style="clear: both;" />
+		<input type="hidden" id="nonce" value="<?php echo wp_create_nonce( 'fb-photo-sync' ); ?>" />
 		<div style="text-align: center;">
 		<h3>Like this plugin? Buy me a beer!</h3>
 			<form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_blank">
@@ -265,7 +266,9 @@ class FB_Photo_Sync {
 	}
 
 	public function ajax_save_photos() {
-		header( 'Content-type: application/json' );
+		if( !check_ajax_referer( 'fb-photo-sync', 'nonce', false ) ) {
+			wp_send_json_error();
+		}
 		$album = json_decode( stripslashes( $_POST['album'] ), true );
 		$wp_photos = $_POST['wp_photos'] == 'true' ? true : false;
 
@@ -312,6 +315,9 @@ class FB_Photo_Sync {
 	}
 
 	public function ajax_delete_photos() {
+		if( !check_ajax_referer( 'fb-photo-sync', 'nonce', false ) ) {
+			wp_send_json_error();
+		}
 		$id = $_POST['id'];
 		header( 'Content-type: application/json' );
 		if( isset( $id ) && current_user_can( 'manage_options' ) ) {

@@ -8,22 +8,6 @@
 		events: function() {
 			var self = this;
 
-			$(document.body).on('click', '#fbps-load-albums', function(e) {
-				e.preventDefault();
-				var page_id = $('#fbps-page-input').val();
-				FB.api('/'+page_id, {fields: 'albums'}, function(r) {
-					if(r.albums) {
-						var albums = r.albums.data;
-						var album_list = '';
-						for(var i = 0; i < albums.length; i++) {
-							var album = albums[i];
-							album_list += '<li data-id="'+album.id+'"><label><input type="checkbox" value="'+album.id+'" /> '+album.name+'</li>';
-						}
-						$('#fbps-page-album-list').html(album_list);
-					}
-				});
-			});
-
 			$('.fbps-list').on('change', 'input[type=checkbox]', function() {
 				var checked = $(this).prop('checked');
 				if(checked) {
@@ -82,6 +66,7 @@
 				if(confirm('Are you sure you want to permanently delete "'+title+'"?')) {
 					var data = {
 						action: 'fbps_delete_album',
+						nonce: $('#nonce').val(),
 						id: $(this).parents('li').data().id
 					};
 					$.post(ajaxurl, data, function(r) {
@@ -102,6 +87,45 @@
 				var album_id = $this.parents('li').data().id;
 				self.facebook_import(album_id, $this.parents('li'), $this.parents('.fbps-options').find('.fbps-wp-photos').prop('checked'));
 			});
+			
+			$(document.body).on('click', '#fbps-load-albums', function(e) {
+				e.preventDefault();
+				var page_id = $('#fbps-page-input').val();
+				FB.api('/'+page_id, {fields: 'albums'}, function(r) {
+					if(r.albums) {
+						self.albums = [];
+						self.get_albums(r.albums);
+					}
+				});
+			});
+		},
+
+		get_albums: function(albums) {
+			var self = this,
+				album_list = '',
+				count = '',
+				description = '';
+
+			self.albums = self.albums.concat(albums.data);
+
+			if (albums.paging && albums.paging.next) {
+				FB.api(albums.paging.next, function(r) {
+					self.get_albums(r);
+				});
+			} else {
+				var albums = self.albums;
+				for(var i = 0; i < albums.length; i++) {
+					var album = albums[i];
+					if (album.count) {
+						count = ' ('+album.count+' photos)';
+					}
+					if (album.description) {
+						description = album.description;
+					}
+					album_list += '<li data-id="'+album.id+'" title="'+description+'"><label><input type="checkbox" value="'+album.id+'" /> '+album.name+count+'</li>';
+				}
+				$('#fbps-page-album-list').html(album_list);
+			}
 		},
 
 		facebook_import: function(album_id, $parent, wp_photos) {
@@ -168,6 +192,7 @@
 			album = JSON.stringify(album);
 			var data = {
 				action: 'fbps_save_album',
+				nonce: $('#nonce').val(),
 				album: album,
 				wp_photos: wp_photos
 			};

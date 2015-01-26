@@ -32,6 +32,11 @@ Things to expect in future releases:
 4. Fancybox modal after clicking on a photo.
 
 == Changelog ==
+= 0.3.4 =
+* Fixed 25-album-limit issue for pages with many albums.
+* Added photo count to album list pre-import.
+* Added nonce check for Ajax calls. 
+
 = 0.3.3 =
 * Added order parameter (asc and desc) to shortcode [fb_album id="8720954366" wp_photos="true" order="asc"] (desc is default).
 
