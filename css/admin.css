@@ -52,3 +52,7 @@ a.fbps-image-sample {
 	margin-left: 85px;
 	margin-right: 10px;
 }
+
+.fbps-counter {
+	display: none;
+}

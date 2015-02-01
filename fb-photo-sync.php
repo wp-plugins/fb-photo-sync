@@ -3,12 +3,14 @@
  * Plugin Name: FB Photo Sync
  * Description: Import and manage Facebook photo ablums on your WordPress website.
  * Author: Mike Auteri
- * Version: 0.3.4
+ * Version: 0.4
  * Author URI: http://www.mikeauteri.com/
  * Plugin URI: http://www.mikeauteri.com/portfolio/fb-photo-sync
  */
 
 class FB_Photo_Sync {
+
+	var $version = '0.4';
 
 	public function __construct() {
 		add_action( 'admin_menu', array( $this, 'add_menu_page' ) );
@@ -21,15 +23,18 @@ class FB_Photo_Sync {
 	}
 
 	public function admin_scripts() {
-		wp_enqueue_style( 'fbps-admin-styles', plugin_dir_url( __FILE__ ) . 'css/admin.css', array(), 1.0 );
-		wp_enqueue_script( 'fbps-zero-clipboard', plugin_dir_url( __FILE__ ) . 'js/jquery.zclip.js', array( 'jquery' ), 1.0, true );
-		wp_enqueue_script( 'fbps-admin-script', plugin_dir_url( __FILE__ ) . 'js/admin.js', array( 'jquery', 'fbps-zero-clipboard' ), 1.0, true );
+		$ver = $this->version;
+		wp_enqueue_style( 'fbps-admin-styles', plugin_dir_url( __FILE__ ) . 'css/admin.css', array(), $ver );
+		wp_enqueue_script( 'fbps-zero-clipboard', plugin_dir_url( __FILE__ ) . 'js/jquery.zclip.js', array( 'jquery' ), $ver, true );
+		wp_enqueue_script( 'fbps-admin-script', plugin_dir_url( __FILE__ ) . 'js/admin.js', array( 'jquery', 'fbps-zero-clipboard' ), $ver, true );
 	}
 
 	public function fbps_scripts() {
-		wp_enqueue_style( 'fbps-styles', plugin_dir_url( __FILE__ ) . 'css/styles.css', array(), 1.0 );
-		wp_enqueue_style( 'fancybox-css', plugin_dir_url( __FILE__ ) . 'fancybox/jquery.fancybox-1.3.4.css', array(), 1.1 );
-    wp_enqueue_script( 'fancybox-js', plugin_dir_url( __FILE__ ) . 'fancybox/jquery.fancybox-1.3.4.pack.js', array( 'jquery' ), 1.1, false );
+		$ver = $this->version;
+		wp_enqueue_style( 'fbps-styles', plugin_dir_url( __FILE__ ) . 'css/styles.css', array(), $ver );
+		wp_enqueue_style( 'light-gallery-css', plugin_dir_url( __FILE__ ) . 'light-gallery/css/lightGallery.css', array(), $ver );
+    wp_enqueue_script( 'light-gallery-js', plugin_dir_url( __FILE__ ) . 'light-gallery/js/lightGallery.min.js', array( 'jquery' ), $ver, false );
+    wp_enqueue_script( 'lazyload', plugin_dir_url( __FILE__ ) . 'js/jquery.lazyload.min.js', array( 'jquery' ), $ver, false );
 	}
 
 	public function closest_image_size( $width, $height, $photos ) {
@@ -105,23 +110,22 @@ class FB_Photo_Sync {
 	}
 
 	public function fb_album_shortcode( $atts ) {
-		extract( shortcode_atts( array(
+		$atts = shortcode_atts( array(
 			'id' => '',
 			'width' => 130,
 			'height' => 130,
 			'order' => 'desc',
-			'wp_photos' => false
-		), $atts ) );
+			'wp_photos' => false,
+		), $atts );
 
-		if( empty( $id ) || is_Nan( $id ) ) {
+		if( empty( $atts['id'] ) || is_Nan( $atts['id'] ) ) {
 			return;
 		}
 
-		$album = get_option( 'fbps_album_'.$id );
+		$album = get_option( 'fbps_album_'.$atts['id'] );
 
 		if( !isset( $album['items'] ) )
 			return;
-
 		ob_start();
 		?>
 		<div id="fbps-album-<?php echo esc_attr( $album['id']	); ?>" class="fbps-album">
@@ -132,10 +136,10 @@ class FB_Photo_Sync {
 				$album['items'] = array_reverse( $album['items'] );
 			}
 			foreach( $album['items'] as $item ) {
-				$thumbnail = $this->closest_image_size( $width, $height, $item['photos'] );
+				$thumbnail = $this->closest_image_size( $atts['width'], $atts['height'], $item['photos'] );
 				$image = $this->closest_image_size( 960, 960, $item['photos'] );
-				if( $wp_photos == 'true' ) {
-					$wp_thumbnail = wp_get_attachment_image_src( $item['wp_photo_id'], array($width, $height) );
+				if( $atts['wp_photos'] == 'true' ) {
+					$wp_thumbnail = wp_get_attachment_image_src( $item['wp_photo_id'], array( $atts['width'], $atts['height'] ) );
 					$wp_image = wp_get_attachment_image_src( $item['wp_photo_id'], array(960, 960) );
 					if( is_array( $wp_thumbnail ) ) {
 						$thumbnail = $wp_thumbnail[0];
@@ -145,9 +149,9 @@ class FB_Photo_Sync {
 					}
 				}
 				?>
-				<li id="fbps-photo-<?php echo esc_attr( $item['id'] ); ?>" class="fbps-photo">
-					<a rel="fbps-album" class="fbps-photo" href="<?php echo esc_url( $image ); ?>" style="width: <?php echo intval( $width ); ?>px; height: <?php echo intval( $height ); ?>px; background-image: url(<?php echo esc_url( $thumbnail ); ?>);" alt="<?php echo esc_attr( $item['name'] ); ?>" title="<?php echo esc_attr( $item['name'] ); ?>">
-					</a>
+				<li id="fbps-photo-<?php echo esc_attr( $item['id'] ); ?>"  class="fbps-photo" data-src="<?php echo esc_url( $image ); ?>" data-sub-html="<p class='lg-fbps'><?php echo esc_html( $item['name'] ); ?></p>">
+					<div style="width: <?php echo esc_attr( $atts['width'] ); ?>px; height: <?php echo intval( $atts['height'] ); ?>px; background-color: #ccc;" data-original="<?php echo esc_url( $thumbnail ); ?>"></div>
+					<img src="<?php echo esc_url( $thumbnail ); ?>" style="display: none;" />
 				</li>
 				<?php
 			}
@@ -157,7 +161,10 @@ class FB_Photo_Sync {
 		</div>
 		<script type="text/javascript">
 			(function($) {
-				$('a[rel="fbps-album"]').fancybox();
+				$('#fbps-album-<?php echo esc_js( $album['id']	); ?> li.fbps-photo > div').lazyload({
+					effect: 'fadeIn'
+				});	
+				$('#fbps-album-<?php echo esc_js( $album['id']	); ?> > ul').lightGallery();
 			})(jQuery);
 		</script>
 		<?php
@@ -191,8 +198,8 @@ class FB_Photo_Sync {
 		?>
 		<hr style="clear: both;" />
 		<input type="hidden" id="nonce" value="<?php echo wp_create_nonce( 'fb-photo-sync' ); ?>" />
-		<div style="text-align: center;">
-		<h3>Like this plugin? Buy me a beer!</h3>
+		<div class="alignleft" style="text-align: center">
+			<h3>Like this plugin?</h3>
 			<form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_blank">
 				<input type="hidden" name="cmd" value="_s-xclick">
 				<input type="hidden" name="encrypted" value="-----BEGIN PKCS7-----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-----END PKCS7-----
@@ -200,6 +207,11 @@ class FB_Photo_Sync {
 				<input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!">
 				<img alt="" border="0" src="https://www.paypalobjects.com/en_US/i/scr/pixel.gif" width="1" height="1">
 			</form>
+		</div>
+		<div class="alignright">
+			<a target="_blank" href="http://www.shareasale.com/r.cfm?b=398770&amp;u=839332&amp;m=41388&amp;urllink=&amp;afftrack=">
+				<img src="<?php echo is_ssl() ? 'https' : 'http'; ?>://i.shareasale.com/image/41388/Feature-Fast-728x90.jpeg" border="0" />
+			</a>
 		</div>
 		<?php
 		echo '</div>'; // wrap
@@ -225,7 +237,7 @@ class FB_Photo_Sync {
 		</ul>
 		<h3>Import Facebook Albums</h3>
 		<div id="import-form">
-			<ul id="fbps-import-list">
+			<ul id="fbps-import-list" class="fbps-list">
 			</ul>
 			<p class="submit">
 				<input type="button" id="import-button" class="button button-primary" value="Import Albums">
@@ -246,7 +258,7 @@ class FB_Photo_Sync {
 			", 'fbps_album_%' );
 
 		$albums = $wpdb->get_results( $query );
-		echo '<ul id="fbps-album-list">';
+		echo '<ul id="fbps-album-list" class="fbps-list">';
 		foreach( $albums as $album ) {
 			$dump = unserialize( $album->option_value );
       $wp_photos = (bool) $dump['items'][0]['wp_photo_id'] ? 'checked="checked"' : '';
@@ -257,7 +269,7 @@ class FB_Photo_Sync {
 				<div class="fbps-options">
 				<p><code>[fb_album id="<?php echo esc_attr( $dump['id'] ); ?>"<?php echo $wp_photos != '' ? ' wp_photos="true"' : ''; ?>]</code></p>
           <p><label><input type="checkbox" <?php echo $wp_photos; ?> class="fbps-wp-photos" /> Import images to media library?</label>
-					<p><?php echo intval( count( $dump['items'] ) ); ?> Photos | <a href="#" class="delete-album">Delete</a> | <a href="#" class="sync-album">Sync</a></p>
+					<p><span class="fbps-counter"><span>0</span> of </span><?php echo intval( count( $dump['items'] ) ); ?> Photos | <a href="#" class="delete-album">Delete</a> | <a href="#" class="sync-album">Sync</a></p>
 				</div>
 			</li>
 			<?php
@@ -265,46 +277,59 @@ class FB_Photo_Sync {
 		echo '</ul>';
 	}
 
+	private function search_array( $id, $items ) {
+		foreach( $items as $key => $item ) {
+			if( $item['id'] == $id ) {
+				return $key;
+			}
+		}
+		return false;
+	}
+
 	public function ajax_save_photos() {
-		if( !check_ajax_referer( 'fb-photo-sync', 'nonce', false ) ) {
+		if( !check_ajax_referer( 'fb-photo-sync', 'nonce', false ) || !current_user_can( 'manage_options' ) ) {
 			wp_send_json_error();
 		}
 		$album = json_decode( stripslashes( $_POST['album'] ), true );
-		$wp_photos = $_POST['wp_photos'] == 'true' ? true : false;
 
-		if( is_array( $album ) && current_user_can( 'manage_options' ) ) {
-				$saved_album = get_option( 'fbps_album_' . $album['id'] );
-				foreach( $album['items'] as $i => $item ) {
-					$wp_save = false;
-					if( isset( $saved_album['items'] ) ) {
-						foreach( $saved_album['items'] as $saved_item ) {
-							if( $item['id'] == $saved_item['id'] && ( isset( $saved_item['wp_photo_id'] ) && wp_get_attachment_image( $saved_item['wp_photo_id'] ) != null ) ) {
-								$wp_save = $saved_item['wp_photo_id'];
-								break;
+		if( is_array( $album ) ) {
+			$wp_photos = $_POST['wp_photos'] == 'true' ? true : false;
+			
+			$saved_album = get_option( 'fbps_album_' . $album['id'] );
+
+			if( isset( $saved_album['items'] ) && is_array( $saved_album['items'] ) ) {
+				$saved_album['name'] = $album['name'];
+				$saved_album['picture'] = $album['picture'];
+
+				foreach( $album['items'] as $item ) {
+					$key = $this->search_array( $item['id'], $saved_album['items'] );
+					if( $key !== false ) {
+						if( isset( $saved_album['items'][$key]['wp_photo_id'] ) && wp_get_attachment_image( $saved_album['items'][$key]['wp_photo_id'] ) != null ) {
+							if( $wp_photos ) {
+								$item['wp_photo_id'] = $saved_album['items'][$key]['wp_photo_id'];
+							} else {
+								wp_delete_attachment( $saved_album['items'][$key]['wp_photo_id'], true );
 							}
-						}
-					}
-					if( $wp_photos ) {
-						if( !$wp_save ) {
+						} else if( $wp_photos ) {
 							$photo = $this->closest_image_size( 1000, 1000, $item['photos'] );
 							$image_id = $this->save_image( $photo, $item['name'] );
-							$album['items'][$i]['wp_photo_id'] = $image_id;
-						} else {
-							$album['items'][$i]['wp_photo_id'] = $wp_save;
+							$item['wp_photo_id'] = $image_id;
 						}
-					} else {
-						if( $wp_save ) {
-							wp_delete_attachment( $wp_save, true );
-						}
+						$saved_album['items'][$key] = $item;
+						continue;
 					}
+					array_push( $saved_album['items'], $item );
 				}
-			update_option( 'fbps_album_' . esc_attr( $album['id'] ), $album );
-				$data = array(
-					'id' => $album['id'],
-					'wp_photos' => $wp_photos,
-					'album' => $album
-				);
-				wp_send_json_success( $data );
+			} else {
+				$saved_album = $album;
+			}
+			update_option( 'fbps_album_' . esc_attr( $saved_album['id'] ), $saved_album );
+			$data = array(
+				'id' => $album['id'],
+				'wp_photos' => $wp_photos,
+				'album' => $album
+			);
+			wp_send_json_success( $data );
 		} else {
 				$data = array(
 					'id' => $album['id'],
@@ -319,7 +344,6 @@ class FB_Photo_Sync {
 			wp_send_json_error();
 		}
 		$id = $_POST['id'];
-		header( 'Content-type: application/json' );
 		if( isset( $id ) && current_user_can( 'manage_options' ) ) {
 			$saved_album = get_option( 'fbps_album_' . $id );
 			if( isset( $saved_album['items'] ) ) {

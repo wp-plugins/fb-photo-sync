@@ -108,7 +108,7 @@
 
 			self.albums = self.albums.concat(albums.data);
 
-			if (albums.paging && albums.paging.next) {
+			if (self.test_obj(albums, 'paging.next')) {
 				FB.api(albums.paging.next, function(r) {
 					self.get_albums(r);
 				});
@@ -117,7 +117,7 @@
 				for(var i = 0; i < albums.length; i++) {
 					var album = albums[i];
 					if (album.count) {
-						count = ' ('+album.count+' photos)';
+						count = ' (<span class="fbps-counter"><span>0</span> of </span>'+album.count+' photos)';
 					}
 					if (album.description) {
 						description = album.description;
@@ -130,6 +130,7 @@
 
 		facebook_import: function(album_id, $parent, wp_photos) {
 			var self = this;
+			$parent.find('.fbps-counter').show();
 			FB.api('/'+album_id, {fields: 'photos,picture,name'}, function(r) {
 				var album = {
 					items: []
@@ -152,12 +153,9 @@
 						};
 						album.items.push(item);
 					}
-					if(self.test_obj(r, 'photos.paging.next')) {
-						self.items_paging(r.photos.paging.next, album, $parent, wp_photos);
-					} else {
-						// done
-						self.ajax_save(r, album, $parent, wp_photos);
-					}
+					self.ajax_save(r, album, $parent, wp_photos);
+				} else {
+					$parent.find('.fbps-counter').hide();
 				}
 			});
 		},
@@ -179,28 +177,34 @@
 						album.items.push(item);
 					}
 				}
-				if(self.test_obj(r, 'paging.next')) {
-					self.items_paging(r.paging.next, album, $parent, wp_photos);
-				} else {
-					// done
-					self.ajax_save(r, album, $parent, wp_photos);
-				}
+				self.ajax_save(r, album, $parent, wp_photos);
 			});
 		},
 
 		ajax_save: function(r, album, $parent, wp_photos) {
-			album = JSON.stringify(album);
-			var data = {
-				action: 'fbps_save_album',
-				nonce: $('#nonce').val(),
-				album: album,
-				wp_photos: wp_photos
-			};
-			$.post(ajaxurl, data, function(r) {
-				if(r.error) {
+			var self = this,
+				album_str = JSON.stringify(album),
+				data = {
+					action: 'fbps_save_album',
+					nonce: $('#nonce').val(),
+					album: album_str,
+					wp_photos: wp_photos
+				};
+			
+			$.post(ajaxurl, data, function(d) {
+				if(d.error) {
 					alert('There was an issue with this album.');
 				}
-				$parent.find('.spinner').remove();
+				$parent.find('.fbps-counter span').html(album.items.length);
+				if (self.test_obj(r, 'photos.paging.next')) {
+					self.items_paging(r.photos.paging.next, album, $parent, wp_photos);
+				} else if (self.test_obj(r, 'paging.next')) {
+					self.items_paging(r.paging.next, album, $parent, wp_photos);
+				} else {
+					$parent.find('.spinner').remove();
+					$parent.find('.fbps-counter').hide();
+					$parent.find('.fbps-counter span').html('0');
+				}
 			});
 		},
 

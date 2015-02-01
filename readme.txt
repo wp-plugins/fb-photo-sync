@@ -32,13 +32,20 @@ Things to expect in future releases:
 4. Fancybox modal after clicking on a photo.
 
 == Changelog ==
+= 0.4 =
+* Enhancement: Cache buster
+* Change: Replaced Fancybox with lightGallery lightbox
+* Bug: Fixed import problem of large albums
+* Enhancement: Improved loader when importing
+* Enhancement: Added Lazy Load to images
+
 = 0.3.4 =
-* Fixed 25-album-limit issue for pages with many albums.
-* Added photo count to album list pre-import.
-* Added nonce check for Ajax calls. 
+* Bug: Fixed 25-album-limit issue for pages with many albums.
+* Enhancement: Added photo count to album list pre-import.
+* Enhancement: Added nonce check for Ajax calls. 
 
 = 0.3.3 =
-* Added order parameter (asc and desc) to shortcode [fb_album id="8720954366" wp_photos="true" order="asc"] (desc is default).
+* Enhancement: Added order parameter (asc and desc) to shortcode [fb_album id="8720954366" wp_photos="true" order="asc"] (desc is default).
 
 = 0.3.2 =
 * Change: Project URL
