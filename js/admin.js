@@ -92,6 +92,10 @@
 				e.preventDefault();
 				var page_id = $('#fbps-page-input').val();
 				FB.api('/'+page_id, {fields: 'albums'}, function(r) {
+					if(r.error) {
+						var error = r.error.message || 'Sorry, something went wrong.';
+						alert(error);
+					}
 					if(r.albums) {
 						self.albums = [];
 						self.get_albums(r.albums);

@@ -286,7 +286,9 @@
                 if (settings.dynamic) {
                     dataSubHtml = settings.dynamicEl[index]['sub-html'];
                 } else {
-                    dataSubHtml = $children.eq(index).attr('data-sub-html');
+                    // Update by Mike Auteri
+                    //dataSubHtml = $children.eq(index).attr('data-sub-html');
+                    dataSubHtml = $children.eq(index).find('div.lg-sub-html').html();
                 }
                 if (typeof dataSubHtml !== 'undefined' && dataSubHtml !== null) {
                     var fL = dataSubHtml.substring(0, 1);

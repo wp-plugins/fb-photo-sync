@@ -3,14 +3,14 @@
  * Plugin Name: FB Photo Sync
  * Description: Import and manage Facebook photo ablums on your WordPress website.
  * Author: Mike Auteri
- * Version: 0.4
+ * Version: 0.4.1
  * Author URI: http://www.mikeauteri.com/
  * Plugin URI: http://www.mikeauteri.com/portfolio/fb-photo-sync
  */
 
 class FB_Photo_Sync {
 
-	var $version = '0.4';
+	var $version = '0.4.1';
 
 	public function __construct() {
 		add_action( 'admin_menu', array( $this, 'add_menu_page' ) );
@@ -149,9 +149,10 @@ class FB_Photo_Sync {
 					}
 				}
 				?>
-				<li id="fbps-photo-<?php echo esc_attr( $item['id'] ); ?>"  class="fbps-photo" data-src="<?php echo esc_url( $image ); ?>" data-sub-html="<p class='lg-fbps'><?php echo esc_html( $item['name'] ); ?></p>">
+				<li id="fbps-photo-<?php echo esc_attr( $item['id'] ); ?>"  class="fbps-photo" data-src="<?php echo esc_url( $image ); ?>">
 					<div style="width: <?php echo esc_attr( $atts['width'] ); ?>px; height: <?php echo intval( $atts['height'] ); ?>px; background-color: #ccc;" data-original="<?php echo esc_url( $thumbnail ); ?>"></div>
 					<img src="<?php echo esc_url( $thumbnail ); ?>" style="display: none;" />
+					<div class="lg-sub-html"><p class="lg-fbps"><?php echo esc_html( $item['name'] ); ?></p></div>
 				</li>
 				<?php
 			}
