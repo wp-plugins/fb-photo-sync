@@ -10,13 +10,15 @@
 
 class FB_Photo_Sync {
 
-	var $version = '0.4.1';
+	var $version = '0.5';
 
 	public function __construct() {
 		add_action( 'admin_menu', array( $this, 'add_menu_page' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'admin_scripts' ) );
 		add_action( 'wp_enqueue_scripts', array( $this, 'fbps_scripts' ) );
 		add_action( 'wp_ajax_fbps_save_album', array( $this, 'ajax_save_photos' ) );
+		add_action( 'wp_ajax_fbps_save_app', array( $this, 'ajax_save_app' ) );
+		add_action( 'wp_ajax_fbps_remove_app', array( $this, 'ajax_remove_app' ) );
 		add_action( 'wp_ajax_fbps_delete_album', array( $this, 'ajax_delete_photos' ) );
 
 		add_shortcode( 'fb_album', array( $this, 'fb_album_shortcode' ) );
@@ -199,20 +201,16 @@ class FB_Photo_Sync {
 		?>
 		<hr style="clear: both;" />
 		<input type="hidden" id="nonce" value="<?php echo wp_create_nonce( 'fb-photo-sync' ); ?>" />
-		<div class="alignleft" style="text-align: center">
-			<h3>Like this plugin?</h3>
-			<form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_blank">
+		<div style="width: 400px;">
+			<form  style="float:right" action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_blank">
 				<input type="hidden" name="cmd" value="_s-xclick">
 				<input type="hidden" name="encrypted" value="-----BEGIN PKCS7-----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-----END PKCS7-----
 				">
 				<input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!">
 				<img alt="" border="0" src="https://www.paypalobjects.com/en_US/i/scr/pixel.gif" width="1" height="1">
 			</form>
-		</div>
-		<div class="alignright">
-			<a target="_blank" href="http://www.shareasale.com/r.cfm?b=398770&amp;u=839332&amp;m=41388&amp;urllink=&amp;afftrack=">
-				<img src="<?php echo is_ssl() ? 'https' : 'http'; ?>://i.shareasale.com/image/41388/Feature-Fast-728x90.jpeg" border="0" />
-			</a>
+			<h3 style="margin:0 0 1px;padding:0;">Like this plugin?</h3>
+			<p style="margin:0;padding:0;">Many hours have gone into its development. Please consider a small donation for continued support.</p>
 		</div>
 		<?php
 		echo '</div>'; // wrap
@@ -220,32 +218,56 @@ class FB_Photo_Sync {
 
 	public function import_page() {
 		global $facebook;
+		$app_id = get_option( 'fbps_app_id' );
 		?>
-		<h3>Find Albums on a Public Page</h3>
-		<p>Type in a Page ID below and click the <em>Find Albums</em> button to pull in available albums.
-		<p>Check the albums you want to import into WordPress, and then click the <em>Import Albums</em> button above to import them.</p>
-		<p>When completed, click the <em>Albums</em> tab for the album shortcode to include in your post or page.</p>
+		<h3>Facebook Application</h3>
+		<p><a href="https://developers.facebook.com/apps/">Create a new Facebook application or associate your site with an existing Facebook application</a></p>
+		<div id="fbps-app"></div>
 		<p>
-			<input type="text" id="fbps-page-input" placeholder="Enter Facebook Page ID" />
-			<input type="button" name="fbps-load-albums" id="fbps-load-albums" class="button" value="Find Albums" />
+		<?php if( ! $app_id ) { ?>
+			<input type="text" id="fbps-app-id" placeholder="Facebook App ID" />
+			<input type="button" id="fbps-app-id-submit" class="button" value="Add App" />
+		<?php } else { ?>
+			<input type="button" id="fbps-app-id-remove" class="button" value="Remove App" />
+		<?php } ?>
 		</p>
-		<p class="description">http://facebook.com/this-is-the-page-id</p>
-		<p>
-			<label for="fbps-wp-images"><input type="checkbox" checked="checked" name="fbps-wp-images" id="fbps-wp-images" /> Import images to WordPress media library?</label>
-		</p>
-		<p class="description">Checking the box above will import and save images from Facebook to your WordPress site. Import will take longer, so be patient.</p>
-		<ul id="fbps-page-album-list" class="fbps-list">
-		</ul>
-		<h3>Import Facebook Albums</h3>
-		<div id="import-form">
-			<ul id="fbps-import-list" class="fbps-list">
-			</ul>
-			<p class="submit">
-				<input type="button" id="import-button" class="button button-primary" value="Import Albums">
+		<?php if( $app_id ) { ?>
+			<h3>Your Personal Facebook Albums</h3>
+			<p>First login below and authenticate your Facebook App, then click 'Show Albums' to load your albums for import.</p>
+			<div id="status">
+			</div>
+			<fb:login-button scope="user_photos" onlogin="checkLoginState();" auto_logout_link="true">
+			</fb:login-button>
+			<p>
+				<input type="button" name="fbps-show-albums" id="fbps-show-albums" class="button" value="Show Albums" />
 			</p>
-		</div>
-
+			<hr />
+			<h3>Find Albums on a Public Page</h3>
+			<p>Type in a Page ID below and click the <em>Find Albums</em> button to pull in available albums.
+			<p>Check the albums you want to import into WordPress, and then click the <em>Import Albums</em> button above to import them.</p>
+			<p>When completed, click the <em>Albums</em> tab for the album shortcode to include in your post or page.</p>
+			<p>
+				<input type="text" id="fbps-page-input" placeholder="Enter Facebook Page ID" />
+				<input type="button" name="fbps-load-albums" id="fbps-load-albums" class="button" value="Find Albums" />
+			</p>
+			<p class="description">http://facebook.com/this-is-the-page-id</p>
+			<hr />
+			<h3>Import Facebook Albums</h3>
+			<ul id="fbps-page-album-list" class="fbps-list">
+			</ul>
+			<div id="import-form">
+				<ul id="fbps-import-list" class="fbps-list">
+				</ul>
+				<p>
+					<label for="fbps-wp-images"><input type="checkbox" checked="checked" name="fbps-wp-images" id="fbps-wp-images" /> Import images to WordPress media library?</label>
+				</p>
+				<p class="description">Checking the box above will import and save images from Facebook to your WordPress site. Import will take longer, so be patient.</p>
+				<p class="submit">
+					<input type="button" id="import-button" class="button button-primary" value="Import Albums">
+				</p>
+			</div>
 		<?php
+		}
 	}
 
 	public function albums_page() {
@@ -262,7 +284,7 @@ class FB_Photo_Sync {
 		echo '<ul id="fbps-album-list" class="fbps-list">';
 		foreach( $albums as $album ) {
 			$dump = unserialize( $album->option_value );
-      $wp_photos = (bool) $dump['items'][0]['wp_photo_id'] ? 'checked="checked"' : '';
+			$wp_photos = isset( $dump['items'][0]['wp_photo_id'] ) && (bool) $dump['items'][0]['wp_photo_id'] ? 'checked="checked"' : '';
 			?>
 			<li data-id="<?php echo esc_attr( $dump['id'] ); ?>">
 				<h3><?php echo esc_html( $dump['name'] ); ?></h3>
@@ -285,6 +307,30 @@ class FB_Photo_Sync {
 			}
 		}
 		return false;
+	}
+
+	public function ajax_save_app() {
+		if( !check_ajax_referer( 'fb-photo-sync', 'nonce', false ) || !current_user_can( 'manage_options' ) || !isset( $_POST['id'] ) || !is_numeric( $_POST['id'] ) ) {
+			wp_send_json_error();
+		}
+		$update = update_option( 'fbps_app_id', sanitize_text_field( $_POST['id'] ) );
+		if( $update ) {
+			wp_send_json_success();
+		} else {
+			wp_send_json_error();
+		}
+	}
+
+	public function ajax_remove_app() {
+		if( !check_ajax_referer( 'fb-photo-sync', 'nonce', false ) || !current_user_can( 'manage_options' ) ) {
+			wp_send_json_error();
+		}
+		$remove = delete_option( 'fbps_app_id' );
+		if( $remove ) {
+			wp_send_json_success();
+		} else {
+			wp_send_json_error();
+		}
 	}
 
 	public function ajax_save_photos() {
@@ -378,21 +424,55 @@ class FB_Photo_Sync {
 		?>
 		<div id="fb-root"></div>
 		<script>
+			var fbps_app_id = "<?php echo esc_js( get_option( 'fbps_app_id' ) ); ?>";
+			function statusChangeCallback(response) {
+				if (response.status === 'connected') {
+					testAPI();
+				} else if (response.status === 'not_authorized') {
+					document.getElementById('status').innerHTML = '<p>Please log ' + 'into this app.</p>';
+				} else {
+					document.getElementById('status').innerHTML = '<p>Please log ' + 'into Facebook.</p>';
+				}
+			}
+
+			function checkLoginState() {
+				FB.getLoginStatus(function(response) {
+					statusChangeCallback(response);
+				});
+			}
+			
 			window.fbAsyncInit = function() {
 				FB.init({
-					//appId      : '', public data, no need for now...
-					status     : true,
-					xfbml      : true
+					appId: fbps_app_id, 
+					status: true,
+					cookie: true,
+					xfbml: true,
+					version: 'v2.3'
+				});
+				
+				FB.getLoginStatus(function(response) {
+					statusChangeCallback(response);
 				});
 			};
-
+			
 			(function(d, s, id){
-				 var js, fjs = d.getElementsByTagName(s)[0];
-				 if(d.getElementById(id)) {return;}
-				 js = d.createElement(s); js.id = id;
-				 js.src = "//connect.facebook.net/en_US/all.js";
-				 fjs.parentNode.insertBefore(js, fjs);
-			 }(document, 'script', 'facebook-jssdk'));
+				var js, fjs = d.getElementsByTagName(s)[0];
+				if(d.getElementById(id)) {return;}
+				js = d.createElement(s); js.id = id;
+				js.src = "//connect.facebook.net/en_US/sdk.js";
+				fjs.parentNode.insertBefore(js, fjs);
+			}(document, 'script', 'facebook-jssdk'));
+
+			function testAPI() {
+				FB.api('/me', function(response) {
+					document.getElementById('status').innerHTML = '<p>Thanks for logging in, <a href="' + response.link + '" target="_blank">' + response.name + '</a>!</p>';
+				});
+
+				FB.api('/' + fbps_app_id, function(response) {
+					console.log(response);
+					document.getElementById('fbps-app').innerHTML = '<p><img src="' + response.icon_url + '" /> ' + response.name + '</p>';
+				});
+			}
 		</script>
 		<?php
 	}

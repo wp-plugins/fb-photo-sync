@@ -102,6 +102,63 @@
 					}
 				});
 			});
+			
+			$(document.body).on('click', '#fbps-show-albums', function(e) {
+				e.preventDefault();
+				var page_id = $('#fbps-page-input').val();
+				FB.api('/me/albums', function(r) {
+					if(r.error) {
+						var error = r.error.message || 'Sorry, something went wrong.';
+						alert(error);
+					}
+					if(r.data) {
+						self.albums = [];
+						self.get_albums(r);
+					}
+				});
+			});
+
+			$('#fbps-app-id-submit').click(function(e) {
+				e.preventDefault();
+				var app_id = $('#fbps-app-id').val();
+				if ($.trim(app_id) === '') {
+					alert('You need to enter your Facebook App ID');
+					return;
+				}
+				var data = {
+					action: 'fbps_save_app',
+					nonce: $('#nonce').val(),
+					id: $('#fbps-app-id').val()
+				};
+				$.post(ajaxurl, data, function(r) {
+					if(r.success) {
+						location.reload();
+					} else {
+						alert('Sorry, something is not correct.');
+					}
+				});
+			});
+
+			$('#fbps-app-id').keypress(function(e) {
+				if (e.keyCode === 13) { // pressed return
+					$('#fbps-app-id-submit').trigger('click');
+				}
+			});
+
+			$('#fbps-app-id-remove').click(function(e) {
+				e.preventDefault();
+				var data = {
+					action: 'fbps_remove_app',
+					nonce: $('#nonce').val(),
+				};
+				$.post(ajaxurl, data, function(r) {
+					if(r.success) {
+						location.reload();
+					} else {
+						alert('Sorry, something is not correct.');
+					}
+				});
+			});
 		},
 
 		get_albums: function(albums) {

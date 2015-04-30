@@ -1,8 +1,8 @@
 === FB Photo Sync ===
 Contributors: mauteri
 Tags: facebook, photos, gallery, albums, facebook albums, image gallery, photo gallery, fancybox, lightbox
-Requires at least: 3.3
-Tested up to: 4.2-alpha
+Requires at least: 3.5
+Tested up to: 4.2
 Stable tag: trunk
 
 Import and manage Facebook photo albums on your WordPress website.
@@ -13,7 +13,6 @@ Easily import Facebook photo albums from a public page into your WordPress websi
 
 Things to expect in future releases:
 
-* Import private photos.
 * Auto syncing albums.
 * Multiple display options.
 * Album editing.
@@ -32,6 +31,11 @@ Things to expect in future releases:
 4. Fancybox modal after clicking on a photo.
 
 == Changelog ==
+= 0.5 =
+* Enhancement: Updated to Facebook API version 2.3
+* Enhancement: Allow private photo syncing
+* Change: Functionality now requires Facebook App
+
 = 0.4.1 =
 * Enhancement: More error handling when importing albums.
 * Bug: Fixed lightGallery lightbbox text display issue.
