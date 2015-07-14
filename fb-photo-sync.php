@@ -3,14 +3,14 @@
  * Plugin Name: FB Photo Sync
  * Description: Import and manage Facebook photo ablums on your WordPress website.
  * Author: Mike Auteri
- * Version: 0.5
+ * Version: 0.5.1
  * Author URI: http://www.mikeauteri.com/
  * Plugin URI: http://www.mikeauteri.com/portfolio/fb-photo-sync
  */
 
 class FB_Photo_Sync {
 
-	var $version = '0.5';
+	var $version = '0.5.1';
 
 	public function __construct() {
 		add_action( 'admin_menu', array( $this, 'add_menu_page' ) );
@@ -138,9 +138,10 @@ class FB_Photo_Sync {
 				$album['items'] = array_reverse( $album['items'] );
 			}
 			foreach( $album['items'] as $item ) {
+				$item_name = isset( $item['name'] ) ? $item['name'] : '';
 				$thumbnail = $this->closest_image_size( $atts['width'], $atts['height'], $item['photos'] );
 				$image = $this->closest_image_size( 960, 960, $item['photos'] );
-				if( $atts['wp_photos'] == 'true' ) {
+				if( $atts['wp_photos'] == 'true' && isset( $item['wp_photo_id'] ) ) {
 					$wp_thumbnail = wp_get_attachment_image_src( $item['wp_photo_id'], array( $atts['width'], $atts['height'] ) );
 					$wp_image = wp_get_attachment_image_src( $item['wp_photo_id'], array(960, 960) );
 					if( is_array( $wp_thumbnail ) ) {
@@ -154,7 +155,7 @@ class FB_Photo_Sync {
 				<li id="fbps-photo-<?php echo esc_attr( $item['id'] ); ?>"  class="fbps-photo" data-src="<?php echo esc_url( $image ); ?>">
 					<div style="width: <?php echo esc_attr( $atts['width'] ); ?>px; height: <?php echo intval( $atts['height'] ); ?>px; background-color: #ccc;" data-original="<?php echo esc_url( $thumbnail ); ?>"></div>
 					<img src="<?php echo esc_url( $thumbnail ); ?>" style="display: none;" />
-					<div class="lg-sub-html"><p class="lg-fbps"><?php echo esc_html( $item['name'] ); ?></p></div>
+					<div class="lg-sub-html"><p class="lg-fbps"><?php echo esc_html( $item_name ); ?></p></div>
 				</li>
 				<?php
 			}
@@ -179,12 +180,12 @@ class FB_Photo_Sync {
 		echo '<div class="wrap">';
 		echo '<h2>FB Photo Sync</h2>';
 		echo '<div id="icon-themes" class="icon32"><br /></div>';
-    echo '<h2 class="nav-tab-wrapper">';
-    foreach( $tabs as $tab => $name ){
+		echo '<h2 class="nav-tab-wrapper">';
+		foreach( $tabs as $tab => $name ){
 			$class = ( $tab == $current ) ? ' nav-tab-active' : '';
 			echo "<a class='nav-tab$class' href='?page=fb-photo-sync&tab=$tab'>$name</a>";
-    }
-    echo '</h2>';
+		}
+		echo '</h2>';
 	}
 
 	public function admin_content( $current = 'import' ) {
@@ -221,41 +222,59 @@ class FB_Photo_Sync {
 		$app_id = get_option( 'fbps_app_id' );
 		?>
 		<h3>Facebook Application</h3>
-		<p><a href="https://developers.facebook.com/apps/">Create a new Facebook application or associate your site with an existing Facebook application</a></p>
 		<div id="fbps-app"></div>
-		<p>
 		<?php if( ! $app_id ) { ?>
-			<input type="text" id="fbps-app-id" placeholder="Facebook App ID" />
-			<input type="button" id="fbps-app-id-submit" class="button" value="Add App" />
-		<?php } else { ?>
-			<input type="button" id="fbps-app-id-remove" class="button" value="Remove App" />
-		<?php } ?>
-		</p>
-		<?php if( $app_id ) { ?>
-			<h3>Your Personal Facebook Albums</h3>
-			<p>First login below and authenticate your Facebook App, then click 'Show Albums' to load your albums for import.</p>
-			<div id="status">
-			</div>
-			<fb:login-button scope="user_photos" onlogin="checkLoginState();" auto_logout_link="true">
-			</fb:login-button>
-			<p>
-				<input type="button" name="fbps-show-albums" id="fbps-show-albums" class="button" value="Show Albums" />
-			</p>
+			<p><input type="text" class="regular-text" id="fbps-app-id" placeholder="Facebook App ID" />
+			<input type="button" id="fbps-app-id-submit" class="button" value="Add App" /></p>
 			<hr />
-			<h3>Find Albums on a Public Page</h3>
-			<p>Type in a Page ID below and click the <em>Find Albums</em> button to pull in available albums.
-			<p>Check the albums you want to import into WordPress, and then click the <em>Import Albums</em> button above to import them.</p>
-			<p>When completed, click the <em>Albums</em> tab for the album shortcode to include in your post or page.</p>
-			<p>
-				<input type="text" id="fbps-page-input" placeholder="Enter Facebook Page ID" />
-				<input type="button" name="fbps-load-albums" id="fbps-load-albums" class="button" value="Find Albums" />
-			</p>
-			<p class="description">http://facebook.com/this-is-the-page-id</p>
+			<div class="instructions">
+				<h3>Instructions:</h3>
+				<ol>
+					<li>Head to <a href="https://developers.facebook.com/apps/" target="_blank">https://developers.facebook.com/apps/</a></li>
+					<li>Select your app or create a new app</li>
+					<li>Click on <strong>Settings</strong> in your app, then at the bottom, click <strong>Add Platform</strong></li>
+					<li>Under the <strong>Select Platform</strong> modal, click <strong>Website</strong></li>
+					<li>Set the <strong>Site URL</strong> in your Facebook App to your domain: <strong><?php echo home_url('/'); ?></strong></li>
+					<li>Copy and Paste the App ID in the text space above and click <strong>Add App</strong></li>
+				</ol>
+			</div>
+		<?php } else { ?>
+			<p><input type="button" id="fbps-app-id-remove" class="button" value="Remove App" /></p>
+			<p class="description">Having issues? Click <strong>Remove App</strong> above and follow the provided instructions.</p>
+			<p class="description">Still having issues? <a href="https://wordpress.org/support/plugin/fb-photo-sync" target="_blank">Search FB Photo Sync support page or post a new topic</a>.</p>
+			<hr />
+		<?php } ?>
+		<?php if( $app_id ) { ?>
+			<div class="fbps-row">
+				<h3>Find Albums on a Public Page</h3>
+				<p>Type in a Page ID below and click the <strong>Find Albums</strong> button to pull in available albums.
+				<p>Check the albums you want to import into WordPress, and then click the <strong>Import Albums</strong> button below to import them.</p>
+				<p>When completed, click the <strong>Albums</strong> tab for the album shortcode to include in your post or page.</p>
+				<p>
+					<input type="text" class="regular-text" id="fbps-page-input" placeholder="Enter Facebook Page ID" />
+					<input type="button" name="fbps-load-albums" id="fbps-load-albums" class="button" value="Find Albums" />
+				</p>
+				<p class="description">http://facebook.com/<strong><u>this-is-the-page-id</u></strong></p>
+			</div>
+			<div class="fbps-row">
+				<h3>Import Your Personal Facebook Albums</h3>
+				<p>First login below and authenticate your Facebook App, then click <strong>Show Albums</strong> to load your albums for import.</p>
+				<div id="status">
+				</div>
+				<fb:login-button scope="user_photos" onlogin="checkLoginState();" auto_logout_link="true">
+				</fb:login-button>
+				<p>
+					<input type="button" name="fbps-show-albums" id="fbps-show-albums" class="button" value="Show Albums" />
+				</p>
+			</div>
+			<div style="clear:both;"></div>
 			<hr />
 			<h3>Import Facebook Albums</h3>
 			<ul id="fbps-page-album-list" class="fbps-list">
+				<li>None selected</li>
 			</ul>
 			<div id="import-form">
+				<h3>Albums to Import</h3>
 				<ul id="fbps-import-list" class="fbps-list">
 				</ul>
 				<p>
@@ -290,8 +309,8 @@ class FB_Photo_Sync {
 				<h3><?php echo esc_html( $dump['name'] ); ?></h3>
 				<a href="#" class="fbps-image-sample" style="background-image: url(<?php echo esc_url( $dump['picture'] ); ?>);"></a>
 				<div class="fbps-options">
-				<p><code>[fb_album id="<?php echo esc_attr( $dump['id'] ); ?>"<?php echo $wp_photos != '' ? ' wp_photos="true"' : ''; ?>]</code></p>
-          <p><label><input type="checkbox" <?php echo $wp_photos; ?> class="fbps-wp-photos" /> Import images to media library?</label>
+					<p><code>[fb_album id="<?php echo esc_attr( $dump['id'] ); ?>"<?php echo $wp_photos != '' ? ' wp_photos="true"' : ''; ?>]</code></p>
+					<p><label><input type="checkbox" <?php echo $wp_photos; ?> class="fbps-wp-photos" /> Import images to media library?</label>
 					<p><span class="fbps-counter"><span>0</span> of </span><?php echo intval( count( $dump['items'] ) ); ?> Photos | <a href="#" class="delete-album">Delete</a> | <a href="#" class="sync-album">Sync</a></p>
 				</div>
 			</li>
@@ -301,12 +320,7 @@ class FB_Photo_Sync {
 	}
 
 	private function search_array( $id, $items ) {
-		foreach( $items as $key => $item ) {
-			if( $item['id'] == $id ) {
-				return $key;
-			}
-		}
-		return false;
+		return array_search( $id, array_column( $items, 'id') );
 	}
 
 	public function ajax_save_app() {
@@ -342,33 +356,38 @@ class FB_Photo_Sync {
 		if( is_array( $album ) ) {
 			$wp_photos = $_POST['wp_photos'] == 'true' ? true : false;
 			
-			$saved_album = get_option( 'fbps_album_' . $album['id'] );
+			$saved_album = get_option( 'fbps_album_' . $album['id'] ) ?: $album;
 
 			if( isset( $saved_album['items'] ) && is_array( $saved_album['items'] ) ) {
 				$saved_album['name'] = $album['name'];
 				$saved_album['picture'] = $album['picture'];
 
-				foreach( $album['items'] as $item ) {
-					$key = $this->search_array( $item['id'], $saved_album['items'] );
-					if( $key !== false ) {
-						if( isset( $saved_album['items'][$key]['wp_photo_id'] ) && wp_get_attachment_image( $saved_album['items'][$key]['wp_photo_id'] ) != null ) {
-							if( $wp_photos ) {
-								$item['wp_photo_id'] = $saved_album['items'][$key]['wp_photo_id'];
-							} else {
-								wp_delete_attachment( $saved_album['items'][$key]['wp_photo_id'], true );
-							}
-						} else if( $wp_photos ) {
-							$photo = $this->closest_image_size( 1000, 1000, $item['photos'] );
-							$image_id = $this->save_image( $photo, $item['name'] );
-							$item['wp_photo_id'] = $image_id;
-						}
-						$saved_album['items'][$key] = $item;
-						continue;
-					}
-					array_push( $saved_album['items'], $item );
+				$i = $this->search_array( $album['items'][0]['id'], $saved_album['items'] );
+
+				if( $i === false ) {
+					$item = $album['items'][0];
+				} else {
+					$item = array_merge( $saved_album['items'][$i], $album['items'][0] );
 				}
-			} else {
-				$saved_album = $album;
+
+				$id = $item['id'];
+				if( isset( $item['wp_photo_id'] ) && wp_get_attachment_image( $item['wp_photo_id'] ) != null ) {
+					if( !$wp_photos ) {
+						wp_delete_attachment( $item['wp_photo_id'], true );
+					}
+				} else if( $wp_photos ) {
+					$photo = $this->closest_image_size( 1000, 1000, $item['photos'] );
+					$name = isset( $item['name'] ) ? $item['name'] : '';
+					$image_id = $this->save_image( $photo, $name );
+					$item['wp_photo_id'] = $image_id;
+				}
+
+				$key = $this->search_array( $item['id'], $saved_album['items'] );	
+				if( $key === false ) {
+					array_push( $saved_album['items'], $item );
+				} else {
+					$saved_album['items'][$key] = $item;
+				}
 			}
 			update_option( 'fbps_album_' . esc_attr( $saved_album['id'] ), $saved_album );
 			$data = array(
@@ -469,7 +488,6 @@ class FB_Photo_Sync {
 				});
 
 				FB.api('/' + fbps_app_id, function(response) {
-					console.log(response);
 					document.getElementById('fbps-app').innerHTML = '<p><img src="' + response.icon_url + '" /> ' + response.name + '</p>';
 				});
 			}

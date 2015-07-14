@@ -35,7 +35,7 @@
 			$('#import-form').on('click', '#import-button', function(e) {
 				e.preventDefault();
 				$('#import-form ul li').each(function() {
-					$(this).append('<span class="spinner" />');
+					$(this).append('<span class="spinner fbps-spinner" />');
 					$(this).find('.spinner').show();
 					var album_id = $(this).find('input[type=checkbox]').val();
 					self.facebook_import(album_id, $(this), $('#fbps-wp-images').prop('checked'));
@@ -82,7 +82,7 @@
 			$('#fbps-album-list').on('click', '.sync-album', function(e) {
 				e.preventDefault();
 				var $this = $(this);
-				$this.parents('.fbps-options').find('p:first-child').append('<span style="float: left" class="spinner" />');
+				$this.parents('.fbps-options').find('p:first-child').append('<span style="float: left" class="spinner fbps-spinner" />');
 				$this.parents('li').find('.spinner').show();
 				var album_id = $this.parents('li').data().id;
 				self.facebook_import(album_id, $this.parents('li'), $this.parents('.fbps-options').find('.fbps-wp-photos').prop('checked'));
@@ -214,7 +214,7 @@
 						};
 						album.items.push(item);
 					}
-					self.ajax_save(r, album, $parent, wp_photos);
+					self.ajax_save(r, album, $parent, wp_photos, 0);
 				} else {
 					$parent.find('.fbps-counter').hide();
 				}
@@ -225,7 +225,10 @@
 			var self = this;
 			$.getJSON(url, function(r) {
 				if(r) {
-					var items = r.data;
+					var items = r.data,
+						new_album = jQuery.extend(true, {}, album);
+
+					new_album.items = [];
 					for(var i = 0; i < items.length; i++) {
 						var item = {
 							id: items[i].id,
@@ -235,28 +238,34 @@
 							picture: items[i].picture,
 							show: true
 						};
-						album.items.push(item);
+						new_album.items.push(item);
 					}
 				}
-				self.ajax_save(r, album, $parent, wp_photos);
+				self.ajax_save(r, new_album, $parent, wp_photos, 0);
 			});
 		},
 
-		ajax_save: function(r, album, $parent, wp_photos) {
+		ajax_save: function(r, album, $parent, wp_photos, item) {
 			var self = this,
-				album_str = JSON.stringify(album),
+				album_str = self.get_album_item(album, item), // import one photo at a time
 				data = {
 					action: 'fbps_save_album',
 					nonce: $('#nonce').val(),
 					album: album_str,
 					wp_photos: wp_photos
 				};
-			
+
 			$.post(ajaxurl, data, function(d) {
 				if(d.error) {
 					alert('There was an issue with this album.');
+					return;
 				}
-				$parent.find('.fbps-counter span').html(album.items.length);
+				++item;
+				if(typeof album.items[item] !== 'undefined') {
+					var counter = parseInt($parent.find('.fbps-counter span').html(), 10);
+					$parent.find('.fbps-counter span').html(++counter);
+					return self.ajax_save(r, album, $parent, wp_photos, item);
+				}
 				if (self.test_obj(r, 'photos.paging.next')) {
 					self.items_paging(r.photos.paging.next, album, $parent, wp_photos);
 				} else if (self.test_obj(r, 'paging.next')) {
@@ -267,6 +276,15 @@
 					$parent.find('.fbps-counter span').html('0');
 				}
 			});
+		},
+
+		get_album_item: function(album, item) {
+			var new_album = jQuery.extend(true, {}, album);
+				new_item = album.items[item];
+
+			 new_album.items = [];
+			 new_album.items.push(new_item);
+			 return JSON.stringify(new_album);
 		},
 
 		test_obj: function(obj, prop) {

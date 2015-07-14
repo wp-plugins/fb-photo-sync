@@ -2,7 +2,7 @@
 Contributors: mauteri
 Tags: facebook, photos, gallery, albums, facebook albums, image gallery, photo gallery, fancybox, lightbox
 Requires at least: 3.5
-Tested up to: 4.2
+Tested up to: 4.2.2
 Stable tag: trunk
 
 Import and manage Facebook photo albums on your WordPress website.
@@ -31,6 +31,11 @@ Things to expect in future releases:
 4. Fancybox modal after clicking on a photo.
 
 == Changelog ==
+= 0.5.1 =
+* Enhancement: Uploads one item at a time for performance
+* Enhancement: Better Facebook App instructions
+* Enhancement: Slightly improved Admin UI
+
 = 0.5 =
 * Enhancement: Updated to Facebook API version 2.3
 * Enhancement: Allow private photo syncing
@@ -71,4 +76,3 @@ Things to expect in future releases:
 
 = 0.1 =
 * Initial release.
-
