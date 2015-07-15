@@ -31,6 +31,9 @@ Things to expect in future releases:
 4. Fancybox modal after clicking on a photo.
 
 == Changelog ==
+= 0.5.1.2 =
+* Bug: Removed function only available in PHP 5.5
+
 = 0.5.1 =
 * Enhancement: Uploads one item at a time for performance
 * Enhancement: Better Facebook App instructions
