@@ -31,6 +31,9 @@ Things to expect in future releases:
 4. Fancybox modal after clicking on a photo.
 
 == Changelog ==
+= 0.5.3 =
+* Enhancement: Ability to turn off lazy load in shortcode with lazy_load="false"
+
 = 0.5.2 =
 * Bug: Removed function only available in PHP 5.5
 

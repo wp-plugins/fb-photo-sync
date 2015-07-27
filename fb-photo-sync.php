@@ -3,14 +3,14 @@
  * Plugin Name: FB Photo Sync
  * Description: Import and manage Facebook photo ablums on your WordPress website.
  * Author: Mike Auteri
- * Version: 0.5.2
+ * Version: 0.5.3
  * Author URI: http://www.mikeauteri.com/
  * Plugin URI: http://www.mikeauteri.com/portfolio/fb-photo-sync
  */
 
 class FB_Photo_Sync {
 
-	var $version = '0.5.2';
+	var $version = '0.5.3';
 
 	public function __construct() {
 		add_action( 'admin_menu', array( $this, 'add_menu_page' ) );
@@ -43,7 +43,7 @@ class FB_Photo_Sync {
 		$current = null;
 
 		foreach( $photos as $photo ) {
-			if( ! $this->valid_image_size( $width, $height, $photo ) ) {
+			if( !$this->valid_image_size( $width, $height, $photo ) ) {
 				continue;
 			}
 
@@ -118,7 +118,10 @@ class FB_Photo_Sync {
 			'height' => 130,
 			'order' => 'desc',
 			'wp_photos' => false,
+			'lazy_load' => 'true'
 		), $atts );
+
+		$atts['lazy_load'] = strtolower( $atts['lazy_load'] ) == 'false' ? false : true;
 
 		if( empty( $atts['id'] ) || is_Nan( $atts['id'] ) ) {
 			return;
@@ -151,9 +154,10 @@ class FB_Photo_Sync {
 						$image = $wp_image[0];
 					}
 				}
+				$image_loaded = !$atts['lazy_load'] ? ' background-image: url(' . esc_url( $thumbnail ) . '); ' : '';
 				?>
 				<li id="fbps-photo-<?php echo esc_attr( $item['id'] ); ?>"  class="fbps-photo" data-src="<?php echo esc_url( $image ); ?>">
-					<div style="width: <?php echo esc_attr( $atts['width'] ); ?>px; height: <?php echo intval( $atts['height'] ); ?>px; background-color: #ccc;" data-original="<?php echo esc_url( $thumbnail ); ?>"></div>
+					<div style="width: <?php echo esc_attr( $atts['width'] ); ?>px; height: <?php echo intval( $atts['height'] ); ?>px; background-color: #ccc;<?php echo esc_attr( $image_loaded ); ?>" data-original="<?php echo esc_url( $thumbnail ); ?>"></div>
 					<img src="<?php echo esc_url( $thumbnail ); ?>" style="display: none;" />
 					<div class="lg-sub-html"><p class="lg-fbps"><?php echo esc_html( $item_name ); ?></p></div>
 				</li>
@@ -165,9 +169,11 @@ class FB_Photo_Sync {
 		</div>
 		<script type="text/javascript">
 			(function($) {
+				<?php if( $atts['lazy_load'] ) { ?>
 				$('#fbps-album-<?php echo esc_js( $album['id']	); ?> li.fbps-photo > div').lazyload({
 					effect: 'fadeIn'
-				});	
+				});
+				<?php } ?>
 				$('#fbps-album-<?php echo esc_js( $album['id']	); ?> > ul').lightGallery();
 			})(jQuery);
 		</script>
