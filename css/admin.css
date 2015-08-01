@@ -13,6 +13,10 @@
 	float: left;
 }
 
+.fbps-enabled {
+	display: none;
+}
+
 #fbps-page-album-list li,
 #fbps-import-list li {
 	display: inline-block;

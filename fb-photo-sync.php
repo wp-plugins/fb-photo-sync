@@ -3,14 +3,14 @@
  * Plugin Name: FB Photo Sync
  * Description: Import and manage Facebook photo ablums on your WordPress website.
  * Author: Mike Auteri
- * Version: 0.5.3
+ * Version: 0.5.4
  * Author URI: http://www.mikeauteri.com/
  * Plugin URI: http://www.mikeauteri.com/portfolio/fb-photo-sync
  */
 
 class FB_Photo_Sync {
 
-	var $version = '0.5.3';
+	var $version = '0.5.4';
 
 	public function __construct() {
 		add_action( 'admin_menu', array( $this, 'add_menu_page' ) );
@@ -246,50 +246,50 @@ class FB_Photo_Sync {
 			</div>
 		<?php } else { ?>
 			<p><input type="button" id="fbps-app-id-remove" class="button" value="Remove App" /></p>
+			<div id="status"></div>
+			<p><fb:login-button scope="user_photos" onlogin="checkLoginState();" auto_logout_link="true"></fb:login-button></p>
 			<p class="description">Having issues? Click <strong>Remove App</strong> above and follow the provided instructions.</p>
 			<p class="description">Still having issues? <a href="https://wordpress.org/support/plugin/fb-photo-sync" target="_blank">Search FB Photo Sync support page or post a new topic</a>.</p>
-			<hr />
 		<?php } ?>
 		<?php if( $app_id ) { ?>
-			<div class="fbps-row">
-				<h3>Find Albums on a Public Page</h3>
-				<p>Type in a Page ID below and click the <strong>Find Albums</strong> button to pull in available albums.
-				<p>Check the albums you want to import into WordPress, and then click the <strong>Import Albums</strong> button below to import them.</p>
-				<p>When completed, click the <strong>Albums</strong> tab for the album shortcode to include in your post or page.</p>
-				<p>
-					<input type="text" class="regular-text" id="fbps-page-input" placeholder="Enter Facebook Page ID" />
-					<input type="button" name="fbps-load-albums" id="fbps-load-albums" class="button" value="Find Albums" />
-				</p>
-				<p class="description">http://facebook.com/<strong><u>this-is-the-page-id</u></strong></p>
-			</div>
-			<div class="fbps-row">
-				<h3>Import Your Personal Facebook Albums</h3>
-				<p>First login below and authenticate your Facebook App, then click <strong>Show Albums</strong> to load your albums for import.</p>
-				<div id="status">
+			<div class="fbps-enabled">
+				<hr />
+				<div class="fbps-row">
+					<h3>Find Albums on a Public Page</h3>
+					<p>Type in a Page ID below and click the <strong>Find Albums</strong> button to pull in available albums.
+					<p>Check the albums you want to import into WordPress, and then click the <strong>Import Albums</strong> button below to import them.</p>
+					<p>When completed, click the <strong>Albums</strong> tab for the album shortcode to include in your post or page.</p>
+					<p>
+						<input type="text" class="regular-text" id="fbps-page-input" placeholder="Enter Facebook Page ID" />
+						<input type="button" name="fbps-load-albums" id="fbps-load-albums" class="button" value="Find Albums" />
+					</p>
+					<p class="description">http://facebook.com/<strong><u>this-is-the-page-id</u></strong></p>
 				</div>
-				<fb:login-button scope="user_photos" onlogin="checkLoginState();" auto_logout_link="true">
-				</fb:login-button>
-				<p>
-					<input type="button" name="fbps-show-albums" id="fbps-show-albums" class="button" value="Show Albums" />
-				</p>
-			</div>
-			<div style="clear:both;"></div>
-			<hr />
-			<h3>Import Facebook Albums</h3>
-			<ul id="fbps-page-album-list" class="fbps-list">
-				<li>None selected</li>
-			</ul>
-			<div id="import-form">
-				<h3>Albums to Import</h3>
-				<ul id="fbps-import-list" class="fbps-list">
+				<div class="fbps-row">
+					<h3>Import Your Personal Facebook Albums</h3>
+					<p>Click the <strong>Show Albums</strong> button below for a list of your personal albums you can import to your WordPress website.</p>
+					<p>
+						<input type="button" name="fbps-show-albums" id="fbps-show-albums" class="button" value="Show Albums" />
+					</p>
+				</div>
+				<div style="clear:both;"></div>
+				<hr />
+				<h3>Import Facebook Albums</h3>
+				<ul id="fbps-page-album-list" class="fbps-list">
+					<li>None selected</li>
 				</ul>
-				<p>
-					<label for="fbps-wp-images"><input type="checkbox" checked="checked" name="fbps-wp-images" id="fbps-wp-images" /> Import images to WordPress media library?</label>
-				</p>
-				<p class="description">Checking the box above will import and save images from Facebook to your WordPress site. Import will take longer, so be patient.</p>
-				<p class="submit">
-					<input type="button" id="import-button" class="button button-primary" value="Import Albums">
-				</p>
+				<div id="import-form">
+					<h3>Albums to Import</h3>
+					<ul id="fbps-import-list" class="fbps-list">
+					</ul>
+					<p>
+						<label for="fbps-wp-images"><input type="checkbox" checked="checked" name="fbps-wp-images" id="fbps-wp-images" /> Import images to WordPress media library?</label>
+					</p>
+					<p class="description">Checking the box above will import and save images from Facebook to your WordPress site. Import will take longer, so be patient.</p>
+					<p class="submit">
+						<input type="button" id="import-button" class="button button-primary" value="Import Albums">
+					</p>
+				</div>
 			</div>
 		<?php
 		}
@@ -458,10 +458,12 @@ class FB_Photo_Sync {
 			function statusChangeCallback(response) {
 				if (response.status === 'connected') {
 					testAPI();
-				} else if (response.status === 'not_authorized') {
+				} else if (response.status === 'unknown') {
 					document.getElementById('status').innerHTML = '<p>Please log ' + 'into this app.</p>';
+					jQuery('.fbps-enabled').hide();
 				} else {
 					document.getElementById('status').innerHTML = '<p>Please log ' + 'into Facebook.</p>';
+					jQuery('.fbps-enabled').hide();
 				}
 			}
 
@@ -477,7 +479,7 @@ class FB_Photo_Sync {
 					status: true,
 					cookie: true,
 					xfbml: true,
-					version: 'v2.3'
+					version: 'v2.4'
 				});
 				
 				FB.getLoginStatus(function(response) {
@@ -498,9 +500,11 @@ class FB_Photo_Sync {
 					document.getElementById('status').innerHTML = '<p>Thanks for logging in, <a href="' + response.link + '" target="_blank">' + response.name + '</a>!</p>';
 				});
 
-				FB.api('/' + fbps_app_id, function(response) {
+				FB.api('/' + fbps_app_id + '?fields=id,icon_url,name', function(response) {
 					document.getElementById('fbps-app').innerHTML = '<p><img src="' + response.icon_url + '" /> ' + response.name + '</p>';
 				});
+
+				jQuery('.fbps-enabled').show();
 			}
 		</script>
 		<?php

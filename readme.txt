@@ -31,6 +31,9 @@ Things to expect in future releases:
 4. Fancybox modal after clicking on a photo.
 
 == Changelog ==
+= 0.5.4 =
+* Change: Updated plugin to use Facebook Graph API v2.4
+
 = 0.5.3 =
 * Enhancement: Ability to turn off lazy load in shortcode with lazy_load="false"
 
